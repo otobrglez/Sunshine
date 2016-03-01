@@ -1,8 +1,10 @@
 package com.opalab.sunshine.app;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.util.Log;
@@ -31,7 +33,6 @@ import java.util.ArrayList;
  */
 public class ForecastFragment extends Fragment {
     private final String LOG_TAG = ForecastFragment.class.getSimpleName();
-    private String queryString = "Ljubljana";
 
     public ForecastFragment() {
     }
@@ -48,13 +49,33 @@ public class ForecastFragment extends Fragment {
         // super.onCreateOptionsMenu(R.menu.forecastfragment, inflater);
     }
 
+    private String getQueryString() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+        return sharedPreferences.getString(
+                getString(R.string.pref_location_key),
+                getString(R.string.pref_location_default)
+        );
+    }
+
+    private String getUnits() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+        return sharedPreferences.getString(
+                getString(R.string.pref_units_key),
+                getString(R.string.pref_units_metric));
+    }
+
+    public void updateWeather() {
+        Log.i("updateWeather", "Doing it w/" + getQueryString() + "  " + getUnits());
+        FetchWeatherTask fetchWeatherTask = new FetchWeatherTask();
+        fetchWeatherTask.execute(getQueryString(), getUnits());
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
 
         if (id == R.id.action_refresh) {
-            FetchWeatherTask fetchWeatherTask = new FetchWeatherTask();
-            fetchWeatherTask.execute(queryString);
+            updateWeather();
             return true;
         }
 
@@ -62,6 +83,12 @@ public class ForecastFragment extends Fragment {
     }
 
     private ArrayAdapter<String> arrayAdapter = null;
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        updateWeather();
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -88,10 +115,6 @@ public class ForecastFragment extends Fragment {
             }
         });
 
-        // Fetch some data
-        FetchWeatherTask fetchWeatherTask = new FetchWeatherTask();
-        fetchWeatherTask.execute(queryString);
-
         return rootView;
     }
 
@@ -103,6 +126,7 @@ public class ForecastFragment extends Fragment {
         protected String[] doInBackground(String... params) {
             if (params.length == 0) return null;
             String query = params[0];
+            String units = params[1];
 
             HttpURLConnection urlConnection = null;
             BufferedReader reader = null;
@@ -141,7 +165,7 @@ public class ForecastFragment extends Fragment {
                 while ((line = reader.readLine()) != null) buffer.append(line + "\n");
                 if (buffer.length() == 0) return null;
 
-                forecast = WeatherDataParser.getWeatherDataFromJson(buffer.toString(), 7);
+                forecast = WeatherDataParser.getWeatherDataFromJson(buffer.toString(), 7, units);
 
             } catch (IOException e) {
                 Log.e("PlaceholderFragment", "Error ", e);
@@ -164,14 +188,14 @@ public class ForecastFragment extends Fragment {
                 }
             }
 
-            for(String f : forecast) System.out.println(f);
-
+            // for (String f : forecast) System.out.println(f);
             return forecast;
         }
 
         @Override
         protected void onPostExecute(String[] results) {
-            if(results != null) {
+            if (results != null) {
+                arrayAdapter.clear();
                 arrayAdapter.addAll(results);
             }
         }

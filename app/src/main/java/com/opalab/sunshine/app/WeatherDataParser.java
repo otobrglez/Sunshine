@@ -20,7 +20,7 @@ public class WeatherDataParser {
         }
     }
 
-    public static String[] getWeatherDataFromJson(String weatherJsonStr, int numDays) throws JSONException {
+    public static String[] getWeatherDataFromJson(String weatherJsonStr, int numDays, String units) throws JSONException {
         String[] results = new String[numDays];
 
         try {
@@ -35,15 +35,12 @@ public class WeatherDataParser {
             dayTime = new Time();
             */
 
-            System.out.println(list.length());
+            // System.out.println(list.length());
 
             for (int i = 0; i < numDays; i++) {
                 String day, description, highAndLow;
                 JSONObject dayForecast = list.getJSONObject(i);
                 JSONObject weatherObject = dayForecast.getJSONArray("weather").getJSONObject(0);
-
-                /* Day */
-
 
                 /* Temp */
                 JSONObject temperatureObject = dayForecast.getJSONObject("temp");
@@ -54,7 +51,13 @@ public class WeatherDataParser {
                 description = weatherObject.getString("description");
 
                 /* High / Low */
+                if (units.equals("imperial")) {
+                    high = high * (9 / 5) + 32;
+                    low = low * (9 / 5) + 32;
+                }
+
                 highAndLow = high + "/" + low;
+
 
                 results[i] = description + " - " + highAndLow;
             }

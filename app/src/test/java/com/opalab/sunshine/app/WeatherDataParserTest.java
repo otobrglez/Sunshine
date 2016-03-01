@@ -26,7 +26,16 @@ public class WeatherDataParserTest {
 
     @Test
     public void testGetWeatherDataFromJson() throws Exception {
-        String[] results = WeatherDataParser.getWeatherDataFromJson(WEATHER_DATA_FREMONT_JUN_4, 3);
+        String[] results = WeatherDataParser.getWeatherDataFromJson(WEATHER_DATA_FREMONT_JUN_4, 3, "metric");
+        for(String p : results){
+            System.out.println(p);
+        }
+        System.out.println(results);
+    }
+
+    @Test
+    public void testGetWeatherDataFromJsonImperial() throws Exception {
+        String[] results = WeatherDataParser.getWeatherDataFromJson(WEATHER_DATA_FREMONT_JUN_4, 3, "imperial");
         for(String p : results){
             System.out.println(p);
         }
