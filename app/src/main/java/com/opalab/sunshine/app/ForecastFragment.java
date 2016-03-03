@@ -18,6 +18,9 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+import com.opalab.sunshine.app.utils.WeatherFetcher;
+import com.opalab.sunshine.app.utils.WeatherDataParser;
+
 import org.json.JSONException;
 
 import java.io.BufferedReader;
@@ -120,7 +123,6 @@ public class ForecastFragment extends Fragment {
 
     public class FetchWeatherTask extends AsyncTask<String, Void, String[]> {
         private final String LOG_TAG = FetchWeatherTask.class.getSimpleName();
-        private final String apiKey = BuildConfig.OPEN_WEATHER_MAP_API_KEY;
 
         @Override
         protected String[] doInBackground(String... params) {
@@ -128,68 +130,8 @@ public class ForecastFragment extends Fragment {
             String query = params[0];
             String units = params[1];
 
-            HttpURLConnection urlConnection = null;
-            BufferedReader reader = null;
-            String[] forecast = null;
-
-            try {
-                final String BASE_URL = "http://api.openweathermap.org/data/2.5/forecast/daily?";
-                final String QUERY_PARAM = "q";
-                final String FORMAT_PARAM = "mode";
-                final String UNITS_PARAM = "units";
-                final String DAYS_PARAM = "cnt";
-                final String APPID_PARAM = "APPID";
-
-                Uri builtUri = Uri.parse(BASE_URL).buildUpon()
-                        .appendQueryParameter(QUERY_PARAM, query)
-                        .appendQueryParameter(FORMAT_PARAM, "json")
-                        .appendQueryParameter(UNITS_PARAM, "metric")
-                        .appendQueryParameter(DAYS_PARAM, "7") // Integer.toString(numDays)
-                        .appendQueryParameter(APPID_PARAM, apiKey)
-                        .build();
-
-                URL url = new URL(builtUri.toString());
-
-                urlConnection = (HttpURLConnection) url.openConnection();
-                urlConnection.setRequestMethod("GET");
-                urlConnection.connect();
-
-                // Read the input stream into a String
-                InputStream inputStream = urlConnection.getInputStream();
-                StringBuffer buffer = new StringBuffer();
-
-                if (inputStream == null) return null;
-                reader = new BufferedReader(new InputStreamReader(inputStream));
-
-                String line;
-                while ((line = reader.readLine()) != null) buffer.append(line + "\n");
-                if (buffer.length() == 0) return null;
-
-                forecast = WeatherDataParser.getWeatherDataFromJson(buffer.toString(), 7, units);
-
-            } catch (IOException e) {
-                Log.e("PlaceholderFragment", "Error ", e);
-                e.printStackTrace();
-                return null;
-            } catch (JSONException e) {
-                Log.e("PFJSon", "Error ", e);
-                e.printStackTrace();
-                return null;
-            } finally {
-                if (urlConnection != null) {
-                    urlConnection.disconnect();
-                }
-                if (reader != null) {
-                    try {
-                        reader.close();
-                    } catch (final IOException e) {
-                        Log.e("PlaceholderFragment", "Error closing stream", e);
-                    }
-                }
-            }
-
-            // for (String f : forecast) System.out.println(f);
-            return forecast;
+            WeatherFetcher weatherFetcher = new WeatherFetcher(BuildConfig.OPEN_WEATHER_MAP_API_KEY, query, units);
+            return weatherFetcher.fetch();
         }
 
         @Override

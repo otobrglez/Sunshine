@@ -1,4 +1,4 @@
-package com.opalab.sunshine.app;
+package com.opalab.sunshine.app.utils;
 
 import android.text.format.Time;
 
@@ -27,16 +27,6 @@ public class WeatherDataParser {
             JSONObject reader = new JSONObject(weatherJsonStr);
             JSONArray list = reader.optJSONArray("list");
 
-            /*
-            Time dayTime = new Time();
-            dayTime.setToNow();
-
-            int julianStartDay = Time.getJulianDay(System.currentTimeMillis(), dayTime.gmtoff);
-            dayTime = new Time();
-            */
-
-            // System.out.println(list.length());
-
             for (int i = 0; i < numDays; i++) {
                 String day, description, highAndLow;
                 JSONObject dayForecast = list.getJSONObject(i);
@@ -57,7 +47,6 @@ public class WeatherDataParser {
                 }
 
                 highAndLow = high + "/" + low;
-
 
                 results[i] = description + " - " + highAndLow;
             }
